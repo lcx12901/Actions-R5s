@@ -14,6 +14,9 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
+      target:
+        required: false
+        default: 'r5s'
       ssh:
         description: 'SSH connection to Actions'
         required: false
@@ -70,7 +73,7 @@ jobs:
         ccache: 'true' #'true' 默认值
         #清空缓存
         clean:  'false'  # 'false' 默认值
-        prefix: ${{ github.workspace }}/openwrt
+        prefix: ${{ github.workspace }}/openwrt-${{ github.event.input.target }}
 
     - name: Load custom feeds
       run: |
