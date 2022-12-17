@@ -111,27 +111,131 @@ jobs:
         echo "commitHash_lcx12901Action=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
 
+        git clone --depth 1 $REPO_URL_Lede -b $REPO_BRANCH_Lede $REPO_PATH_Lede
+        cd $REPO_PATH_Lede
+        echo "commitHash_Lede=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_Lede_Package -b $REPO_BRANCH_Lede_Package $REPO_PATH_Lede_Package
+        cd $REPO_PATH_Lede_Package
+        echo "commitHash_Lede_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_Lede_Luci -b $REPO_BRANCH_Lede_Luci $REPO_PATH_Lede_Luci
+        cd $REPO_PATH_Lede_Luci
+        echo "commitHash_Lede_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_OPENWRT_ROUTING -b $REPO_BRANCH_OPENWRT_ROUTING $REPO_PATH_OPENWRT_ROUTING
+        cd $REPO_PATH_OPENWRT_ROUTING
+        echo "commitHash_OPENWRT_ROUTING=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        
+        git clone --depth 1 $REPO_URL_OPENWRT_TELEPHONY -b $REPO_BRANCH_OPENWRT_TELEPHONY $REPO_PATH_OPENWRT_TELEPHONY
+        cd $REPO_PATH_OPENWRT_TELEPHONY
+        echo "commitHash_OPENWRT_TELEPHONY=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_HelloWorld -b $REPO_BRANCH_HelloWorld $REPO_PATH_HelloWorld 
+        cd $REPO_PATH_HelloWorld
+        echo "commitHash_HelloWorld=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_PassWall_Packages -b $REPO_BRANCH_PassWall_Packages $REPO_PATH_PassWall_Packages
+        cd $REPO_PATH_PassWall_Packages
+        echo "commitHash_PassWall_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_PassWall_Luci -b $REPO_BRANCH_PassWall_Luci $REPO_PATH_PassWall_Luci
+        cd $REPO_PATH_PassWall_Luci
+        echo "commitHash_PassWall_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_PassWall2 -b $REPO_BRANCH_PassWall2 $REPO_PATH_PassWall2
+        cd $REPO_PATH_PassWall2
+        echo "commitHash_PassWall2=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        git clone --depth 1 $REPO_URL_OpenClash -b $REPO_BRANCH_OpenClash $REPO_PATH_OpenClash
+        cd $REPO_PATH_OpenClash
+        echo "commitHash_OpenClash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        # git clone --depth 1 $REPO_URL_ThemeArgon -b $REPO_BRANCH_ThemeArgon $REPO_PATH_ThemeArgon
+        # cd $REPO_PATH_ThemeArgon
+        # echo "commitHash_ThemeArgon=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        # cd
+        git clone --depth 1 $REPO_URL_ArgonConfig -b $REPO_BRANCH_ArgonConfig $REPO_PATH_ArgonConfig 
+        cd $REPO_PATH_ArgonConfig 
+        echo "commitHash_ArgonConfig=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
+        # git clone --depth 1 $REPO_URL_luci_app_dockerman -b $REPO_BRANCH_luci_app_dockerman $REPO_PATH_luci_app_dockerman
+        # cd $REPO_PATH_luci_app_dockerman
+        # echo "commitHash_luci_app_dockerman=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        # cd
+    - name: Show Commit Head and Combination Heads
+      id: combHeader
+      run: |
+        echo "commitHash_lcx12901Action: ${{ steps.getHash.outputs.commitHash_lcx12901Action }}"
+        echo "commitHash_Lede: ${{ steps.getHash.outputs.commitHash_Lede }}"
+        echo "commitHash_Lede_Package: ${{ steps.getHash.outputs.commitHash_Lede_Package }}"
+        echo "commitHash_Lede_Luci: ${{ steps.getHash.outputs.commitHash_Lede_Luci }}"
+        echo "commitHash_OPENWRT_ROUTING: ${{ steps.getHash.outputs.commitHash_OPENWRT_ROUTING }}"
+        echo "commitHash_OPENWRT_TELEPHONY: ${{ steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY }}"
+        echo "commitHash_HelloWorld: ${{ steps.getHash.outputs.commitHash_HelloWorld }}"
+        echo "commitHash_PassWall_Package: ${{ steps.getHash.outputs.commitHash_PassWall_Package }}"
+        echo "commitHash_PassWall_Luci: ${{ steps.getHash.outputs.commitHash_PassWall_Luci }}"
+        echo "commitHash_PassWall2: ${{ steps.getHash.outputs.commitHash_PassWall2 }}"
+        echo "commitHash_OpenClash: ${{ steps.getHash.outputs.commitHash_OpenClash }}"
+        echo "commitHash_ArgonConfig: ${{ steps.getHash.outputs.commitHash_ArgonConfig }}"
+        echo "commitHash_All=\
+          ${{steps.getHash.outputs.commitHash_lcx12901Action}}\
+          ${{steps.getHash.outputs.commitHash_Lede}}\
+          ${{steps.getHash.outputs.commitHash_Lede_Package}}\
+          ${{steps.getHash.outputs.commitHash_Lede_Luci}}\
+          ${{steps.getHash.outputs.commitHash_OPENWRT_ROUTING}}\
+          ${{steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY}}\
+          ${{steps.getHash.outputs.commitHash_HelloWorld}}\
+          ${{steps.getHash.outputs.commitHash_PassWall_Package}}\
+          ${{steps.getHash.outputs.commitHash_PassWall_Luci}}\
+          ${{steps.getHash.outputs.commitHash_PassWall2}}\
+          ${{steps.getHash.outputs.commitHash_OpenClash}}\
+          ${{steps.getHash.outputs.commitHash_ArgonConfig}}" >> $GITHUB_OUTPUT
     - name: Compare Commit Hash
       id: cacheHash
-      uses: actions/cache@v2
+      uses: actions/cache@v3.0.11
       with:
-        path: .commitHash
-        key: HEAD-${{ steps.getHash.outputs.commitHash }}
+        path: .commitHash_All
+        key: HEAD-${{ steps.combHeader.outputs.commitHash_All }}
+
 
     - name: Save New Commit Hash
       if: steps.cacheHash.outputs.cache-hit != 'true'
       run: |
-        echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+        echo ${{ steps.getHash.outputs.commitHash_lcx12901Action }} | tee .commitHash_lcx12901Action
+        echo ${{ steps.getHash.outputs.commitHash_Lede }} | tee .commitHash_Lede
+        echo ${{ steps.getHash.outputs.commitHash_Lede_Package }} | tee .commitHash_Lede_Package
+        echo ${{ steps.getHash.outputs.commitHash_Lede_Luci }} | tee .commitHash_Lede_Luci
+        echo ${{ steps.getHash.outputs.commitHash_OPENWRT_ROUTING }} | tee .commitHash_OPENWRT_ROUTING
+        echo ${{ steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY }} | tee .commitHash_OPENWRT_TELEPHONY
+        echo ${{ steps.getHash.outputs.commitHash_HelloWorld }} | tee .commitHash_HelloWorld
+        echo ${{ steps.getHash.outputs.commitHash_PassWall_Package }} | tee .commitHash_PassWall_Package
+        echo ${{ steps.getHash.outputs.commitHash_PassWall_Luci }} | tee .commitHash_PassWall_Luci
+        echo ${{ steps.getHash.outputs.commitHash_PassWall2 }} | tee .commitHash_PassWall2
+        echo ${{ steps.getHash.outputs.commitHash_OpenClash }} | tee .commitHash_OpenClash
+        echo ${{ steps.getHash.outputs.commitHash_ArgonConfig }} | tee .commitHash_ArgonConfig
+        echo ${{ steps.combHeader.outputs.commitHash_All }} | tee .commitHash_All
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@v2.0.3
+      with:
+        token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        retain_days: 2
+        keep_minimum_runs: 6
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@v0.2.1
+      with:
+        keep_latest: 6
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Trigger build
       if: steps.cacheHash.outputs.cache-hit != 'true'
       uses: peter-evans/repository-dispatch@v1
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        event-type: Source Code Update
-
-    - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 1
+        token: ${{ secrets.OPENWRTACTION_TRIGGER }}
+        event-type: OpenWrt Related Code Updates
