@@ -23,12 +23,12 @@ env:
   REPO_PATH_Lede: "lede"
 
   # DHDAXCW Package源码
-  REPO_URL_DHDAXCW_Package: https://github.com/DHDAXCW/packages
+  REPO_URL_DHDAXCW_Package: https://github.com/DHDAXCW/packages.git
   REPO_BRANCH_DHDAXCW_Package: master
   REPO_PATH_DHDAXCWDHDAXCW_Package : "DHDAXCWpackage"
 
   # DHDAXCW luci源码
-  REPO_URL_DHDAXCW_Luci: https://github.com/DHDAXCW/luci
+  REPO_URL_DHDAXCW_Luci: https://github.com/DHDAXCW/luci.git
   REPO_BRANCH_DHDAXCW_Luci: master
   REPO_PATH_DHDAXCW_Luci : "luci"
 
