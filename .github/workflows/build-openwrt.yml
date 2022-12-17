@@ -12,6 +12,7 @@ name: Build OpenWrt
 
 on:
   repository_dispatch:
+    types: ['OpenWrt Related Code Updates']
   workflow_dispatch:
     inputs:
       target:
