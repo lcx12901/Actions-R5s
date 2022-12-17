@@ -12,13 +12,90 @@
 name: Update Checker
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  REPO_BRANCH: master
+  # lcx12901/Actions-R5s源码
+  REPO_URL_lcx12901Action: https://github.com/lcx12901/Actions-R5s.git
+  REPO_BRANCH_lcx12901Action: main
+  REPO_PATH_lcx12901Action: "Actions-R5s"
+
+  # Lean源码
+  REPO_URL_Lede: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH_Lede: master
+  REPO_PATH_Lede: "lede"
+
+  # Lean Package源码
+  REPO_URL_Lede_Package: https://github.com/coolsnowwolf/packages
+  REPO_BRANCH_Lede_Package: master
+  REPO_PATH_Lede_Package : "ledepackage"
+
+  # Lean luci源码
+  REPO_URL_Lede_Luci: https://github.com/coolsnowwolf/luci
+  REPO_BRANCH_Lede_Luci: master
+  REPO_PATH_Lede_Luci : "luci"
+
+  # Openwrt routing源码
+  REPO_URL_OPENWRT_ROUTING: https://git.openwrt.org/feed/routing.git
+  REPO_BRANCH_OPENWRT_ROUTING: master
+  REPO_PATH_OPENWRT_ROUTING : "routing"
+
+  # Openwrt telephony源码
+  REPO_URL_OPENWRT_TELEPHONY: https://git.openwrt.org/feed/telephony.git
+  REPO_BRANCH_OPENWRT_TELEPHONY: master
+  REPO_PATH_OPENWRT_TELEPHONY : "telephony"
+
+  # SSRP源码
+  REPO_URL_HelloWorld: https://github.com/fw876/helloworld
+  REPO_BRANCH_HelloWorld: master
+  REPO_PATH_HelloWorld : "helloworld"
+
+  # Passwall packages源码
+  REPO_URL_PassWall_Packages: https://github.com/xiaorouji/openwrt-passwall
+  REPO_BRANCH_PassWall_Packages: packages
+  REPO_PATH_PassWall_Packages : "openwrt-passwall_packages"
+
+  # Passwall luci源码
+  REPO_URL_PassWall_Luci: https://github.com/xiaorouji/openwrt-passwall
+  REPO_BRANCH_PassWall_Luci: luci
+  REPO_PATH_PassWall_Luci : "openwrt-passwall_luci"
+
+  # Passwall2源码
+  REPO_URL_PassWall2: https://github.com/xiaorouji/openwrt-passwall2.git
+  REPO_BRANCH_PassWall2: main
+  REPO_PATH_PassWall2 : "openwrt-passwall2"
+
+  # OpenClash源码
+  REPO_URL_OpenClash: https://github.com/vernesong/OpenClash.git
+  REPO_BRANCH_OpenClash: master
+  REPO_PATH_OpenClash : "openclash"
+
+  # jerrykuku/luci-theme-argon主题源码
+  # REPO_URL_ThemeArgon: https://github.com/jerrykuku/luci-theme-argon
+  # REPO_BRANCH_ThemeArgon: master
+  # REPO_PATH_ThemeArgon : "luci-theme-argon"
+
+  # luci-app-argon-config主题配置源码
+  REPO_URL_ArgonConfig: https://github.com/jerrykuku/luci-app-argon-config
+  REPO_BRANCH_ArgonConfig: master
+  REPO_PATH_ArgonConfig : "luci-app-argon-config"
+
+  # Dockerman源码
+  # REPO_URL_luci_app_dockerman: https://github.com/lisaac/luci-app-dockerman
+  # REPO_BRANCH_luci_app_dockerman: master
+  # REPO_PATH_luci_app_dockerman : "luci-app-dockerman"
+
+  # luci-app-vssr的依赖源码
+  # REPO_URL_lua_maxminddb: https://github.com/jerrykuku/lua-maxminddb
+  # REPO_BRANCH_lua_maxminddb: master
+  # REPO_PATH_lua_maxminddb : "lua-maxminddb"
+
+  # luci-app-vssr源码
+  # REPO_URL_luci_app_vssr: https://github.com/jerrykuku/luci-app-vssr
+  # REPO_BRANCH_luci_app_vssr: master
+  # REPO_PATH_luci_app_vssr : "luci-app-vssr"
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: 0 */18 * * *
+  schedule:
+    - cron: 0 */6 * * *
 
 jobs:
   check:
@@ -29,8 +106,10 @@ jobs:
     - name: Get Commit Hash
       id: getHash
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH .
-        echo "::set-output name=commitHash::$(git rev-parse HEAD)"
+        git clone --depth 1 $REPO_URL_lcx12901Action -b $REPO_BRANCH_lcx12901Action $REPO_PATH_lcx12901Action
+        cd $REPO_PATH_lcx12901Action
+        echo "commitHash_lcx12901Action=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        cd
 
     - name: Compare Commit Hash
       id: cacheHash
