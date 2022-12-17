@@ -119,7 +119,7 @@ jobs:
         cd $REPO_PATH_DHDAXCW_Package
         echo "commitHash_DHDAXCW_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
-        git clone --depth 1 $REPO_URL_DHDAXCW_Luci -b $REPO_BRANCH_Lede_Luci $REPO_PATH_DHDAXCW_Luci
+        git clone --depth 1 $REPO_URL_DHDAXCW_Luci -b $REPO_BRANCH_DHDAXCW_Luci $REPO_PATH_DHDAXCW_Luci
         cd $REPO_PATH_DHDAXCW_Luci
         echo "commitHash_DHDAXCW_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
