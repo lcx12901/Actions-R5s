@@ -23,12 +23,12 @@ env:
   REPO_PATH_Lede: "lede"
 
   # DHDAXCW Package源码
-  REPO_URL_DHDAXCW_Package: https://github.com/DHDAXCW/packages.git
+  REPO_URL_DHDAXCW_Package: https://github.com/DHDAXCW/packages
   REPO_BRANCH_DHDAXCW_Package: master
-  REPO_PATH_DHDAXCWDHDAXCW_Package : "DHDAXCWpackage"
+  REPO_PATH_DHDAXCW_Package : "DHDAXCWPackage"
 
   # DHDAXCW luci源码
-  REPO_URL_DHDAXCW_Luci: https://github.com/DHDAXCW/luci.git
+  REPO_URL_DHDAXCW_Luci: https://github.com/DHDAXCW/luci
   REPO_BRANCH_DHDAXCW_Luci: master
   REPO_PATH_DHDAXCW_Luci : "luci"
 
@@ -115,14 +115,17 @@ jobs:
         cd $REPO_PATH_Lede
         echo "commitHash_Lede=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
+
         git clone --depth 1 $REPO_URL_DHDAXCW_Package -b $REPO_BRANCH_DHDAXCW_Package $REPO_PATH_DHDAXCW_Package
         cd $REPO_PATH_DHDAXCW_Package
         echo "commitHash_DHDAXCW_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
+
         git clone --depth 1 $REPO_URL_DHDAXCW_Luci -b $REPO_BRANCH_DHDAXCW_Luci $REPO_PATH_DHDAXCW_Luci
         cd $REPO_PATH_DHDAXCW_Luci
         echo "commitHash_DHDAXCW_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
+
         git clone --depth 1 $REPO_URL_OPENWRT_ROUTING -b $REPO_BRANCH_OPENWRT_ROUTING $REPO_PATH_OPENWRT_ROUTING
         cd $REPO_PATH_OPENWRT_ROUTING
         echo "commitHash_OPENWRT_ROUTING=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
