@@ -43,7 +43,7 @@ jobs:
             https://api.github.com/repos/$SOURCE_USER/$SOURCE_NAME/commits\?sha\=$SOURCE_BRANCH\&path\=tools | jq '.[0] | .sha' | sed 's/"//g')
           echo "CURRENT_TOOLS_HASH=$CURRENT_TOOLS_HASH" >> $GITHUB_ENV
           echo "CURRENT_TOOLS_HASH is $CURRENT_TOOLS_HASH"
-          export CACHE_TOOLS_HASH=$(curl -fSsL https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/cache-tools-hash.txt)
+          export CACHE_TOOLS_HASH=$(curl -fSsL https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/cache-tools-hash.txt)
           echo "CACHE_TOOLS_HASH is $CACHE_TOOLS_HASH"
           if [ -z "$CACHE_TOOLS_HASH" ] || [ "$CURRENT_TOOLS_HASH" != "$CACHE_TOOLS_HASH" ]; then
             echo "REBUILD_TOOLS=true" >> $GITHUB_OUTPUT
@@ -54,13 +54,15 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          docker rmi `docker images -q`
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
           sudo -E apt-get -qq update
-          sudo -E apt-get -qq install tzdata $(curl -fsSL git.io/depends-ubuntu-2004) jq libfuse-dev rdate
+          sudo -E apt-get -qq install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
-          sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
-          sudo dpkg-reconfigure -f noninteractive tzdata
+          sudo timedatectl set-timezone "$TZ"
+          df -hT $PWD
       - name: Clone Source Code
         if: steps.init.conclusion == 'success' && !cancelled()
         id: clone
@@ -161,7 +163,7 @@ jobs:
             https://api.github.com/repos/$SOURCE_USER/$SOURCE_NAME/commits\?sha\=$SOURCE_BRANCH\&path\=toolchain | jq '.[0] | .sha' | sed 's/"//g')
           echo "CURRENT_TOOLCHAIN_HASH=$CURRENT_TOOLCHAIN_HASH" >> $GITHUB_ENV
           echo "CURRENT_TOOLCHAIN_HASH is $CURRENT_TOOLCHAIN_HASH"
-          export CACHE_TOOLCHAIN_HASH=$(curl -fSsL https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/cache-toolchain-hash.txt)
+          export CACHE_TOOLCHAIN_HASH=$(curl -fSsL https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/cache-toolchain-hash.txt)
           echo "CACHE_TOOLCHAIN_HASH is $CACHE_TOOLCHAIN_HASH"
           if [ -z "$CACHE_TOOLCHAIN_HASH" ] || [ "$CURRENT_TOOLCHAIN_HASH" != "$CACHE_TOOLCHAIN_HASH" ]; then
             echo "REBUILD_TOOLCHAIN=true" >> $GITHUB_OUTPUT
@@ -172,13 +174,15 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          docker rmi `docker images -q`
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
           sudo -E apt-get -qq update
-          sudo -E apt-get -qq install tzdata $(curl -fsSL git.io/depends-ubuntu-2004) jq libfuse-dev rdate
+          sudo -E apt-get -qq install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
           sudo -E apt-get -qq autoremove --purge
           sudo -E apt-get -qq clean
-          sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
-          sudo dpkg-reconfigure -f noninteractive tzdata
+          sudo timedatectl set-timezone "$TZ"
+          df -hT $PWD
       - name: Clone Source Code
         id: clone
         if: steps.init.conclusion == 'success' && !cancelled()
@@ -199,7 +203,7 @@ jobs:
         run: |
           cd $OPENWRTROOT
           rm -rf build_dir staging_dir
-          wget -c -t=3 https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/$TARGET_INFO-prebuild-tools.tar.xz
+          wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-prebuild-tools.tar.xz
           ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
           rm *.tar.xz
       - name: Prepare config file
