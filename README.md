@@ -1,26 +1,44 @@
-**English** | [中文](https://p3terx.com/archives/build-openwrt-with-github-actions.html)
+# [OpenWrt-Cache](https://github.com/SuLingGG/OpenWrt-Cache)
 
-# Actions-OpenWrt
+## 项目介绍
 
-[![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square&label=LICENSE)](https://github.com/P3TERX/Actions-OpenWrt/blob/master/LICENSE)
-![GitHub Stars](https://img.shields.io/github/stars/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Stars&logo=github)
-![GitHub Forks](https://img.shields.io/github/forks/P3TERX/Actions-OpenWrt.svg?style=flat-square&label=Forks&logo=github)
+本项目旨在生成 OpenWrt 工具链 (toolchain) 并将工具链缓存至 Release。
 
-A template for building OpenWrt with GitHub Actions
+本项目有以下特性:
 
-## Usage
+- 一键生成多平台工具链并自动发布至本仓库 Release
+- 在 Github Action 流程中可节省 30~40 分钟的 tools & toolchain 编译时间
+- 提供适用于本项目工具链缓存的 Github Action [示例文件](https://github.com/SuLingGG/OpenWrt-Toolchain/blob/main/.github/workflows/coolsnowwolf-lede-example.yml)
 
-- Click the [Use this template](https://github.com/P3TERX/Actions-OpenWrt/generate) button to create a new repository.
-- Generate `.config` files using [Lean's OpenWrt](https://github.com/coolsnowwolf/lede) source code. ( You can change it through environment variables in the workflow file. )
-- Push `.config` file to the GitHub repository.
-- Select `Build OpenWrt` on the Actions page.
-- Click the `Run workflow` button.
-- When the build is complete, click the `Artifacts` button in the upper right corner of the Actions page to download the binaries.
+## 生成工具链
 
-## Tips
+- Fork 本项目，在 config 文件夹内创建以设备 `target/subtarget.config` 为 `路径/文件名` 命名的 OpenWrt 目标平台配置文件。
 
-- It may take a long time to create a `.config` file and build the OpenWrt firmware. Thus, before create repository to build your own firmware, you may check out if others have already built it which meet your needs by simply [search `Actions-Openwrt` in GitHub](https://github.com/search?q=Actions-openwrt).
-- Add some meta info of your built firmware (such as firmware architecture and installed packages) to your repository introduction, this will save others' time.
+  以树莓派 4 为例： `config/bcm27xx/bcm2711.config`
+
+  `bcm2711.config` 文件内容:
+
+  ```
+  CONFIG_TARGET_bcm27xx=y
+  CONFIG_TARGET_bcm27xx_bcm2711=y
+  CONFIG_TARGET_bcm27xx_bcm2711_DEVICE_rpi-4=y
+  ```
+
+- 在 [workflows 文件](https://github.com/SuLingGG/OpenWrt-Toolchain/blob/main/.github/workflows/coolsnowwolf-lede-master-toolchain.yml) 的 全局变量 `env` 中指定欲使用的 OpenWrt 源码项目地址 `SOURCE_URL`、项目分支 `SOURCE_BRANCH`，在矩阵变量 `matrix` 中配置设备平台字段 `PLATFORM`，使 `PLATFORM` 字段与上文 `target/subtarget` 字段相对应。
+
+  以树莓派4 为例：`PLATFORM: [bcm27xx/bcm2711]`
+
+- 如果你想生成多平台工具链缓存，需分别配置各个设备的目标平台配置文件，并正确配置矩阵变量 `matrix` :
+
+  配置文件:
+
+  `config/bcm27xx/bcm2711.config`、`config/rockchip/armv8.config`、`config/x86/64.config`
+
+  矩阵变量:
+
+  `PLATFORM: [bcm27xx/bcm2711, rockchip/armv8, x86/64]`
+
+- 在 Action 页面 [触发工具链编译](https://p3terx.com/archives/github-actions-manual-trigger.html#toc_7)。
 
 ## Credits
 
@@ -40,5 +58,3 @@ A template for building OpenWrt with GitHub Actions
 - [peter-evans/repository-dispatch](https://github.com/peter-evans/repository-dispatch)
 
 ## License
-
-[MIT](https://github.com/P3TERX/Actions-OpenWrt/blob/main/LICENSE) © [**P3TERX**](https://p3terx.com)
