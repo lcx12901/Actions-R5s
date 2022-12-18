@@ -1,4 +1,4 @@
-name: Coolsnowwolf/Lede Toolchain Cache
+name: Coolsnowwolf/Lede Pre Packages
 on:
   repository_dispatch:
     types: ['compile Packages']
