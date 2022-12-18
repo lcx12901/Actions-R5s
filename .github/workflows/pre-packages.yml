@@ -12,6 +12,7 @@ env:
   SOURCE_BRANCH: master
   FEEDS_CONF: feeds_config/custom.feeds.conf.default
   CONFIG_FILE: config/R5S.config
+  DIY_P2_SH: diy-part2.sh
   RELEASE_BRANCH: main
   RELEASE_TAG: toolchain
   TZ: Asia/Shanghai
@@ -115,4 +116,4 @@ jobs:
         if: steps.fetchToolChain.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
-          make package/compile -j$(nproc)
+          make V=s -j$(nproc)
