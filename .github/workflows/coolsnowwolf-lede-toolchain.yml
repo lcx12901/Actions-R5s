@@ -1,7 +1,7 @@
 name: Coolsnowwolf/Lede Toolchain Cache
 on:
-  workflow_dispatch:
-    types: compile Tools
+  repository_dispatch:
+    types: ['compile Tools']
 #  schedule:
 #    - cron: 0 18 * * *
 #  watch:
