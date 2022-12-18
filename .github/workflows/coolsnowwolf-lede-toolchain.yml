@@ -50,6 +50,7 @@ jobs:
           fi
 
       - name: Initialization Environment
+        if: steps.hash.outputs.REBUILD_TOOLS == 'true' && !cancelled()
         id: init
         env:
           DEBIAN_FRONTEND: noninteractive
