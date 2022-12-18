@@ -273,10 +273,15 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: output/*
 
-      - name: Trigger build
-        if: steps.cacheHash.outputs.cache-hit != 'true'
-        uses: peter-evans/repository-dispatch@v1
-        with:
-          token: ${{ secrets.OPENWRTACTION_TRIGGER }}
-          repository: ${{ matrix.PLATFORM }}
-          event-type: compile Packages
+Trigger_build:
+  name: Compile Toolchain ${{ matrix.PLATFORM }}
+  needs: [ Build_Toolchain ]
+  runs-on: ubuntu-22.04
+  steps:
+    - name: Trigger build
+      if: steps.cacheHash.outputs.cache-hit != 'true'
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{ secrets.OPENWRTACTION_TRIGGER }}
+        event-type: compile Packages
+
