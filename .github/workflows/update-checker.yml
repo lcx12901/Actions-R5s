@@ -22,15 +22,15 @@ env:
   REPO_BRANCH_Lede: master
   REPO_PATH_Lede: "lede"
 
-  # DHDAXCW Package源码
-  REPO_URL_DHDAXCW_Package: https://github.com/DHDAXCW/packages
-  REPO_BRANCH_DHDAXCW_Package: master
-  REPO_PATH_DHDAXCW_Package : "DHDAXCWPackage"
+  # LEDE Package源码
+  REPO_URL_LEDE_Package: https://github.com/coolsnowwolf/packages
+  REPO_BRANCH_LEDE_Package: master
+  REPO_PATH_LEDE_Package : "LEDEPackage"
 
-  # DHDAXCW luci源码
-  REPO_URL_DHDAXCW_Luci: https://github.com/DHDAXCW/luci
-  REPO_BRANCH_DHDAXCW_Luci: master
-  REPO_PATH_DHDAXCW_Luci : "luci"
+  # LEDE luci源码
+  REPO_URL_LEDE_Luci: https://github.com/coolsnowwolf/luci
+  REPO_BRANCH_LEDE_Luci: master
+  REPO_PATH_LEDE_Luci : "luci"
 
   # Openwrt routing源码
   REPO_URL_OPENWRT_ROUTING: https://git.openwrt.org/feed/routing.git
@@ -116,14 +116,14 @@ jobs:
         echo "commitHash_Lede=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
 
-        git clone --depth 1 $REPO_URL_DHDAXCW_Package -b $REPO_BRANCH_DHDAXCW_Package $REPO_PATH_DHDAXCW_Package
-        cd $REPO_PATH_DHDAXCW_Package
-        echo "commitHash_DHDAXCW_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        git clone --depth 1 $REPO_URL_LEDE_Package -b $REPO_BRANCH_LEDE_Package $REPO_PATH_LEDE_Package
+        cd $REPO_PATH_LEDE_Package
+        echo "commitHash_LEDE_Package=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
 
-        git clone --depth 1 $REPO_URL_DHDAXCW_Luci -b $REPO_BRANCH_DHDAXCW_Luci $REPO_PATH_DHDAXCW_Luci
-        cd $REPO_PATH_DHDAXCW_Luci
-        echo "commitHash_DHDAXCW_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        git clone --depth 1 $REPO_URL_LEDE_Luci -b $REPO_BRANCH_LEDE_Luci $REPO_PATH_LEDE_Luci
+        cd $REPO_PATH_LEDE_Luci
+        echo "commitHash_LEDE_Luci=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         cd
 
         git clone --depth 1 $REPO_URL_OPENWRT_ROUTING -b $REPO_BRANCH_OPENWRT_ROUTING $REPO_PATH_OPENWRT_ROUTING
@@ -172,8 +172,8 @@ jobs:
       run: |
         echo "commitHash_lcx12901Action: ${{ steps.getHash.outputs.commitHash_lcx12901Action }}"
         echo "commitHash_Lede: ${{ steps.getHash.outputs.commitHash_Lede }}"
-        echo "commitHash_DHDAXCW_Package: ${{ steps.getHash.outputs.commitHash_DHDAXCW_Package }}"
-        echo "commitHash_DHDAXCW_Luci: ${{ steps.getHash.outputs.commitHash_DHDAXCW_Luci }}"
+        echo "commitHash_LEDE_Package: ${{ steps.getHash.outputs.commitHash_LEDE_Package }}"
+        echo "commitHash_LEDE_Luci: ${{ steps.getHash.outputs.commitHash_LEDE_Luci }}"
         echo "commitHash_OPENWRT_ROUTING: ${{ steps.getHash.outputs.commitHash_OPENWRT_ROUTING }}"
         echo "commitHash_OPENWRT_TELEPHONY: ${{ steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY }}"
         echo "commitHash_HelloWorld: ${{ steps.getHash.outputs.commitHash_HelloWorld }}"
@@ -185,8 +185,8 @@ jobs:
         echo "commitHash_All=\
           ${{steps.getHash.outputs.commitHash_lcx12901Action}}\
           ${{steps.getHash.outputs.commitHash_Lede}}\
-          ${{steps.getHash.outputs.commitHash_DHDAXCW_Package}}\
-          ${{steps.getHash.outputs.commitHash_DHDAXCW_Luci}}\
+          ${{steps.getHash.outputs.commitHash_LEDE_Package}}\
+          ${{steps.getHash.outputs.commitHash_LEDE_Luci}}\
           ${{steps.getHash.outputs.commitHash_OPENWRT_ROUTING}}\
           ${{steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY}}\
           ${{steps.getHash.outputs.commitHash_HelloWorld}}\
@@ -208,8 +208,8 @@ jobs:
       run: |
         echo ${{ steps.getHash.outputs.commitHash_lcx12901Action }} | tee .commitHash_lcx12901Action
         echo ${{ steps.getHash.outputs.commitHash_Lede }} | tee .commitHash_Lede
-        echo ${{ steps.getHash.outputs.commitHash_DHDAXCW_Package }} | tee .commitHash_DHDAXCWe_Package
-        echo ${{ steps.getHash.outputs.commitHash_DHDAXCW_Luci }} | tee .commitHash_DHDAXCW_Luci
+        echo ${{ steps.getHash.outputs.commitHash_LEDE_Package }} | tee .commitHash_LEDE_Package
+        echo ${{ steps.getHash.outputs.commitHash_LEDE_Luci }} | tee .commitHash_LEDE_Luci
         echo ${{ steps.getHash.outputs.commitHash_OPENWRT_ROUTING }} | tee .commitHash_OPENWRT_ROUTING
         echo ${{ steps.getHash.outputs.commitHash_OPENWRT_TELEPHONY }} | tee .commitHash_OPENWRT_TELEPHONY
         echo ${{ steps.getHash.outputs.commitHash_HelloWorld }} | tee .commitHash_HelloWorld
