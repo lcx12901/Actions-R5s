@@ -274,7 +274,7 @@ jobs:
           artifacts: output/*
 
   Trigger_build:
-    name: Compile Toolchain ${{ matrix.PLATFORM }}
+    name: Trigger_Packages
     needs: [ Build_Toolchain ]
     runs-on: ubuntu-22.04
     steps:
