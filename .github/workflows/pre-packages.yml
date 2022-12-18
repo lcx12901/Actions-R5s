@@ -73,16 +73,6 @@ jobs:
           ./scripts/feeds update -a 
           ./scripts/feeds install -a
 
-      - name: Build Package
-        id: BuildPackage
-        run: |
-          cd openwrt
-          echo -e 'CONFIG_DEVEL=y\nCONFIG_CCACHE=y' >> .config #Cache.Speedup
-          make defconfig
-          make download -j8
-          find dl -size -1024c -exec ls -l {} \;
-          find dl -size -1024c -exec rm -f {} \;
-
       - name: Fetch Cached Tools
         id: fetchTool
         run: |
@@ -122,6 +112,17 @@ jobs:
           mkdir -p bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
           mv $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$DEVICE_TARGET-$DEVICE_SUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz
           ls bin/target/*/*
+
+      - name: Build Package
+        id: BuildPackage
+        if: steps.fetchToolChain.conclusion == 'success' && !cancelled()
+        run: |
+          cd openwrt
+          echo -e 'CONFIG_DEVEL=y\nCONFIG_CCACHE=y' >> .config #Cache.Speedup
+          make defconfig
+          make download -j8
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
 
       - name: Compile the firmware
         id: compile
