@@ -109,7 +109,13 @@ jobs:
           tar -xf $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
           ToolChainDir=$(ls | grep $DEVICE_TARGET-$DEVICE_SUBTARGET)
           mkdir -p bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
-          mv $ToolChainDir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$RELEASE_TAG-$TARGET_INFO_gcc-11.3.0_musl.Linux-x86_64.tar.xz
+          mv $ToolChainDir openwrt-toolchain-$DEVICE_TARGET-$DEVICE_SUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz
+          mv openwrt-toolchain-$DEVICE_TARGET-$DEVICE_SUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
           ls bin/target/*/*
-          
 
+      - name: Build Package
+        id: fetchToolChain
+        if: steps.fetchToolChain.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          make package/compile -j$(nproc)
