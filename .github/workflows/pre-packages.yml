@@ -65,7 +65,6 @@ jobs:
 
       - name: Install Feeds
         id: feeds
-        if: steps.clone.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           ./scripts/feeds update -a 
