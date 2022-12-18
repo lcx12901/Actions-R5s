@@ -1,0 +1,114 @@
+name: Coolsnowwolf/Lede Toolchain Cache
+on:
+  repository_dispatch:
+    types: ['compile Packages']
+#  schedule:
+#    - cron: 0 18 * * *
+#  watch:
+#    types: started
+
+env:
+  SOURCE_URL: https://github.com/coolsnowwolf/lede
+  SOURCE_BRANCH: master
+  RELEASE_BRANCH: main
+  RELEASE_TAG: toolchain
+  TZ: Asia/Shanghai
+
+jobs:
+  Build_Packages:
+    name: Compile Packages ${{ matrix.PLATFORM }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        PLATFORM: [x86/64, rockchip/armv8]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Initialization Environment
+        if: steps.hash.outputs.REBUILD_TOOLS == 'true' && !cancelled()
+        id: init
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi `docker images -q`
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo timedatectl set-timezone "$TZ"
+          export SOURCE_USER=$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')
+          echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
+          export SOURCE_NAME=$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')
+          echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
+          export TARGET_INFO="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH"
+          echo "TARGET_INFO=$TARGET_INFO" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
+          df -hT $PWD
+
+      - name: Clone Source Code
+        if: steps.init.conclusion == 'success' && !cancelled()
+        id: clone
+        run: |
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt --single-branch
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+
+      - name: Load custom feeds
+        run: |
+          [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+          chmod +x $DIY_P1_SH
+          cd openwrt
+
+      - name: Install Feeds
+        id: feeds
+        if: steps.clone.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          ./scripts/feeds update -a 
+          ./scripts/feeds install -a
+
+      - name: Fetch Cached Tools
+        id: fetchTool
+        run: |
+          cd $OPENWRTROOT
+          rm -rf build_dir staging_dir
+          wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-prebuild-tools.tar.xz
+          ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
+          rm *.tar.xz
+
+      - name: Prepare config file
+        env:
+          PLATFORM: ${{ matrix.PLATFORM }}
+        id: config
+        if: steps.fetch.conclusion == 'success' && !cancelled()
+        run: |
+          cp config/$PLATFORM.config $OPENWRTROOT/.config
+          cat config/extra.config >> $OPENWRTROOT/.config
+          cd $OPENWRTROOT
+          export DEVICE_TARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f3)"
+          echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+          export DEVICE_SUBTARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f4)"
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+          make defconfig
+          export DEVICE_ARCH="$(grep -v ^\# .config | grep CONFIG_ARCH= | cut -d\" -f2)"
+          echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
+          DEVICE_ARCH_PACKAGES="$(grep -v ^\# .config | grep CONFIG_TARGET_ARCH_PACKAGES= | cut -d\" -f2)"
+          echo "DEVICE_ARCH_PACKAGES=$DEVICE_ARCH_PACKAGES" >> $GITHUB_ENV
+
+      - name: Fetch Cached ToolChain
+        id: fetchToolChain
+        run: |
+          cd $OPENWRTROOT
+          rm -rf bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/* || true
+          mkdir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET || true
+          wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
+          tar -xf $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
+          ToolChainDir=$(ls | grep $DEVICE_TARGET-$DEVICE_SUBTARGET)
+          mv $ToolChainDir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/
+          rm *.tar.xz
+          ls bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/
+

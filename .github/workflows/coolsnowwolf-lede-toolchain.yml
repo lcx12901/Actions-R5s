@@ -258,6 +258,7 @@ jobs:
         run: |
           mkdir output
           cd $OPENWRTROOT/bin/targets/*/*
+          pwd
           TOOLCHAIN_TAR=$(ls | grep .tar.xz)
           mv $TOOLCHAIN_TAR $GITHUB_WORKSPACE/output/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
           echo $CURRENT_TOOLCHAIN_HASH >> $GITHUB_WORKSPACE/output/cache-toolchain-hash.txt
