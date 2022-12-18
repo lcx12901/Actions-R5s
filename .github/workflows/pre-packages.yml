@@ -108,7 +108,8 @@ jobs:
           wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
           tar -xf $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
           ToolChainDir=$(ls | grep $DEVICE_TARGET-$DEVICE_SUBTARGET)
-          mv $ToolChainDir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/
-          rm *.tar.xz
-          ls bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/
+          mkdir -p bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
+          mv $ToolChainDir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$RELEASE_TAG-$TARGET_INFO_gcc-11.3.0_musl.Linux-x86_64.tar.xz
+          ls bin/target/*/*
+          
 
