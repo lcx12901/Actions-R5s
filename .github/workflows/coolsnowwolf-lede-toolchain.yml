@@ -41,6 +41,9 @@ jobs:
         run: |
           export CURRENT_TOOLS_HASH=$(curl -fsSL \
             https://api.github.com/repos/$SOURCE_USER/$SOURCE_NAME/commits\?sha\=$SOURCE_BRANCH\&path\=tools | jq '.[0] | .sha' | sed 's/"//g')
+          echo "$SOURCE_USER"
+          echo "$SOURCE_NAME"
+          echo "$SOURCE_BRANCH"
           echo "CURRENT_TOOLS_HASH=$CURRENT_TOOLS_HASH" >> $GITHUB_ENV
           echo "CURRENT_TOOLS_HASH is $CURRENT_TOOLS_HASH"
           export CACHE_TOOLS_HASH=$(curl -fSsL https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/cache-tools-hash.txt)
