@@ -1,0 +1,269 @@
+name: Coolsnowwolf/Lede Toolchain Cache
+on:
+  workflow_dispatch:
+    types: ['compile Tools']
+#  schedule:
+#    - cron: 0 18 * * *
+#  watch:
+#    types: started
+
+env:
+  SOURCE_URL: https://github.com/coolsnowwolf/lede
+  SOURCE_BRANCH: master
+  RELEASE_BRANCH: main
+  RELEASE_TAG: toolchain
+  TZ: Asia/Shanghai
+
+jobs:
+  Build_Tools:
+    name: Compile Tools
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Generate Variables
+        id: env
+        run: |
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install jq
+          export SOURCE_USER=$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')
+          echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
+          export SOURCE_NAME=$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')
+          echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
+          export TARGET_INFO="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH"
+          echo "TARGET_INFO=$TARGET_INFO" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
+
+      - name: Compare Tools Hash
+        id: hash
+        run: |
+          export CURRENT_TOOLS_HASH=$(curl -fsSL \
+            https://api.github.com/repos/$SOURCE_USER/$SOURCE_NAME/commits\?sha\=$SOURCE_BRANCH\&path\=tools | jq '.[0] | .sha' | sed 's/"//g')
+          echo "CURRENT_TOOLS_HASH=$CURRENT_TOOLS_HASH" >> $GITHUB_ENV
+          echo "CURRENT_TOOLS_HASH is $CURRENT_TOOLS_HASH"
+          export CACHE_TOOLS_HASH=$(curl -fSsL https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/cache-tools-hash.txt)
+          echo "CACHE_TOOLS_HASH is $CACHE_TOOLS_HASH"
+          if [ -z "$CACHE_TOOLS_HASH" ] || [ "$CURRENT_TOOLS_HASH" != "$CACHE_TOOLS_HASH" ]; then
+            echo "REBUILD_TOOLS=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Initialization Environment
+        if: steps.hash.outputs.REBUILD_TOOLS == 'true' && !cancelled()
+        id: init
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install tzdata $(curl -fsSL git.io/depends-ubuntu-2004) jq libfuse-dev rdate
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
+          sudo dpkg-reconfigure -f noninteractive tzdata
+      - name: Clone Source Code
+        if: steps.init.conclusion == 'success' && !cancelled()
+        id: clone
+        run: |
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt --single-branch
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+      - name: Install Feeds
+        if: steps.clone.conclusion == 'success' && !cancelled()
+        id: feeds
+        run: |
+          cd $OPENWRTROOT
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+      - name: Generate Config File
+        if: steps.feeds.conclusion == 'success' && !cancelled()
+        id: config
+        run: |
+          cd $OPENWRTROOT
+          touch .config
+          echo CONFIG_DEVEL=y >> .config
+          # echo CONFIG_BUILD_ALL_HOST_TOOLS=y >> .config
+          echo CONFIG_AUTOREMOVE=y >> .config
+          echo CONFIG_CCACHE=y >> .config
+          echo CONFIG_BUILD_LOG=y >> .config
+          echo CONFIG_BUILD_LOG_DIR=\"./logs\" >> .config
+          echo CONFIG_ALL=y >> .config
+          make defconfig
+      - name: Download Tools
+        if: steps.config.conclusion == 'success' && !cancelled()
+        id: download
+        run: |
+          cd $OPENWRTROOT
+          make tools/download -j16
+      - name: Compile Tools
+        if: steps.download.conclusion == 'success' && !cancelled()
+        id: tools
+        run: |
+          cd $OPENWRTROOT
+          make tools/install -j$(nproc)
+      - name: Upload Error Logs
+        uses: actions/upload-artifact@v3
+        if: steps.tools.conclusion == 'failure' && !cancelled()
+        with:
+          name: Logs_Tools_${{ env.FILE_DATE }}
+          path: ${{ env.OPENWRTROOT }}/logs
+
+      - name: Organize Tools Files
+        id: organize
+        if: steps.tools.conclusion == 'success' && !cancelled()
+        run: |
+          mkdir output
+          cd $OPENWRTROOT
+          tar --mtime=now -Jcf $GITHUB_WORKSPACE/output/$TARGET_INFO-prebuild-tools.tar.xz staging_dir/host build_dir/host .ccache
+          echo $CURRENT_TOOLS_HASH > $GITHUB_WORKSPACE/output/cache-tools-hash.txt
+          ls -lh $GITHUB_WORKSPACE/output
+      - name: Upload Prebuild Tools To Release
+        if: steps.organize.conclusion == 'success' && !cancelled()
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.TARGET_INFO }}-prebuild
+          allowUpdates: true
+          tag: ${{ env.RELEASE_TAG }}
+          commit: ${{ env.RELEASE_BRANCH }}
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: output/*
+
+  Build_Toolchain:
+    name: Compile Toolchain ${{ matrix.PLATFORM }}
+    needs: [Build_Tools]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        PLATFORM: [x86/64, rockchip/armv8]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Generate Variables
+        id: env
+        run: |
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install jq
+          export SOURCE_USER=$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')
+          echo "SOURCE_USER=$SOURCE_USER" >> $GITHUB_ENV
+          export SOURCE_NAME=$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')
+          echo "SOURCE_NAME=$SOURCE_NAME" >> $GITHUB_ENV
+          export TARGET_INFO="$SOURCE_USER-$SOURCE_NAME-$SOURCE_BRANCH"
+          echo "TARGET_INFO=$TARGET_INFO" >> $GITHUB_ENV
+          echo "FILE_DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
+      - name: Compare Toolchain Hash
+        id: hash
+        run: |
+          export CURRENT_TOOLCHAIN_HASH=$(curl -fsSL \
+            https://api.github.com/repos/$SOURCE_USER/$SOURCE_NAME/commits\?sha\=$SOURCE_BRANCH\&path\=toolchain | jq '.[0] | .sha' | sed 's/"//g')
+          echo "CURRENT_TOOLCHAIN_HASH=$CURRENT_TOOLCHAIN_HASH" >> $GITHUB_ENV
+          echo "CURRENT_TOOLCHAIN_HASH is $CURRENT_TOOLCHAIN_HASH"
+          export CACHE_TOOLCHAIN_HASH=$(curl -fSsL https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/cache-toolchain-hash.txt)
+          echo "CACHE_TOOLCHAIN_HASH is $CACHE_TOOLCHAIN_HASH"
+          if [ -z "$CACHE_TOOLCHAIN_HASH" ] || [ "$CURRENT_TOOLCHAIN_HASH" != "$CACHE_TOOLCHAIN_HASH" ]; then
+            echo "REBUILD_TOOLCHAIN=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Initialization Environment
+        if: steps.hash.outputs.REBUILD_TOOLCHAIN == 'true' && !cancelled()
+        id: init
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install tzdata $(curl -fsSL git.io/depends-ubuntu-2004) jq libfuse-dev rdate
+          sudo -E apt-get -qq autoremove --purge
+          sudo -E apt-get -qq clean
+          sudo ln -fs /usr/share/zoneinfo/$TZ /etc/localtime
+          sudo dpkg-reconfigure -f noninteractive tzdata
+      - name: Clone Source Code
+        id: clone
+        if: steps.init.conclusion == 'success' && !cancelled()
+        run: |
+          git clone $SOURCE_URL -b $SOURCE_BRANCH openwrt --single-branch
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+      - name: Install Feeds
+        id: feeds
+        if: steps.clone.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          ./scripts/feeds update -a 
+          ./scripts/feeds install -a
+      - name: Fetch Cached Tools
+        id: fetch
+        if: steps.feeds.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          rm -rf build_dir staging_dir
+          wget -c -t=3 https://github.com/EnnawYang/OpenWrt-Toolchain-Cache/releases/download/$RELEASE_TAG/$TARGET_INFO-prebuild-tools.tar.xz
+          ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
+          rm *.tar.xz
+      - name: Prepare config file
+        env:
+          PLATFORM: ${{ matrix.PLATFORM }}
+        id: config
+        if: steps.fetch.conclusion == 'success' && !cancelled()
+        run: |
+          cp config/$PLATFORM.config $OPENWRTROOT/.config
+          cat config/extra.config >> $OPENWRTROOT/.config
+          cd $OPENWRTROOT
+          export DEVICE_TARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f3)"
+          echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+          export DEVICE_SUBTARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f4)"
+          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+          make defconfig
+          export DEVICE_ARCH="$(grep -v ^\# .config | grep CONFIG_ARCH= | cut -d\" -f2)"
+          echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
+          DEVICE_ARCH_PACKAGES="$(grep -v ^\# .config | grep CONFIG_TARGET_ARCH_PACKAGES= | cut -d\" -f2)"
+          echo "DEVICE_ARCH_PACKAGES=$DEVICE_ARCH_PACKAGES" >> $GITHUB_ENV
+      - name: Modify Files
+        id: modify
+        if: steps.config.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          mkdir -p staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl
+          touch staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl/.prepared
+          sed -i '/tools\/Makefile/d' Makefile
+          sed -i 's/ $(tools\/stamp-compile)//;s/ $(tools\/stamp-check)//' Makefile
+      - name: Compile Toolchain
+        id: toolchain
+        if: steps.modify.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          echo -e "$(nproc) thread compile"
+          make toolchain/install -j$(nproc) || make toolchain/install -j1 V=s
+          make target/toolchain/install -j$(nproc)
+      - name: Upload Error logs
+        uses: actions/upload-artifact@v3
+        if: steps.toolchain.conclusion == 'failure' && !cancelled()
+        with:
+          name: Logs_Toolchain_${{ env.DEVICE_TARGET }}_${{ env.DEVICE_SUBTARGET }}_${{ env.FILE_DATE }}
+          path: ${{ env.OPENWRTROOT }}/logs
+
+      - name: Organize Toolchain Files
+        id: organize
+        if: steps.toolchain.conclusion == 'success' && !cancelled()
+        run: |
+          mkdir output
+          cd $OPENWRTROOT/bin/targets/*/*
+          TOOLCHAIN_TAR=$(ls | grep .tar.xz)
+          mv $TOOLCHAIN_TAR $GITHUB_WORKSPACE/output/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
+          echo $CURRENT_TOOLCHAIN_HASH >> $GITHUB_WORKSPACE/output/cache-toolchain-hash.txt
+          ls -lh $GITHUB_WORKSPACE/output
+      - name: Deploy Files To Release
+        id: release
+        if: steps.organize.conclusion == 'success' && !cancelled()
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.TARGET_INFO }}-toolchain-cache
+          allowUpdates: true
+          tag: ${{ env.RELEASE_TAG }}
+          commit: ${{ env.RELEASE_BRANCH }}
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: output/*
