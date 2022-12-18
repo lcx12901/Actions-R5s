@@ -116,6 +116,7 @@ jobs:
         if: steps.fetchToolChain.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
+          make download -j$(nproc)
           make tools/compile -j$(nproc)
           make target/compile -j$(nproc)
           make toolchain/compile -j$(nproc)
