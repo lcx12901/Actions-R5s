@@ -10,6 +10,8 @@ on:
 env:
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
+  FEEDS_CONF: feeds_config/custom.feeds.conf.default
+  CONFIG_FILE: config/R5S.config
   RELEASE_BRANCH: main
   RELEASE_TAG: toolchain
   TZ: Asia/Shanghai
