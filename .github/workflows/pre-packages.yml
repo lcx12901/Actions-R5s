@@ -83,7 +83,7 @@ jobs:
         env:
           PLATFORM: ${{ matrix.PLATFORM }}
         id: config
-        if: steps.fetch.conclusion == 'success' && !cancelled()
+        if: steps.fetchTool.conclusion == 'success' && !cancelled()
         run: |
           cp config/$PLATFORM.config $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
@@ -100,6 +100,7 @@ jobs:
 
       - name: Fetch Cached ToolChain
         id: fetchToolChain
+        if: steps.config.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           rm -rf bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/* || true
