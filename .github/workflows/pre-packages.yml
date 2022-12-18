@@ -116,4 +116,9 @@ jobs:
         if: steps.fetchToolChain.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
-          make V=s -j$(nproc)
+          make tools/compile -j$(nproc)
+          make target/compile -j$(nproc)
+          make toolchain/compile -j$(nproc)
+          make buildinfo
+          make diffconfig buildversion feedsversion
+          make package/compile -j$(nproc)
