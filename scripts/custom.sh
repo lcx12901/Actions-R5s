@@ -36,3 +36,20 @@ svn co https://github.com/DHDAXCW/packages/trunk/utils/coremark customfeeds/pack
 # sed -i 's/5.4/6.0/g' ./target/linux/rockchip/Makefile
 # rm -rf target/linux/rockchip/image/armv8.mk
 # cp -f $GITHUB_WORKSPACE/armv8.mk target/linux/rockchip/image/armv8.mk
+
+mkdir -p files/root
+pushd files/root
+
+## Install oh-my-zsh
+# Clone oh-my-zsh repository
+git clone https://github.com/robbyrussell/oh-my-zsh ./.oh-my-zsh
+
+# Install extra plugins
+git clone https://github.com/zsh-users/zsh-autosuggestions ./.oh-my-zsh/custom/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ./.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-completions ./.oh-my-zsh/custom/plugins/zsh-completions
+
+# Get .zshrc dotfile
+cp $GITHUB_WORKSPACE/data/zsh/.zshrc .
+
+popd
