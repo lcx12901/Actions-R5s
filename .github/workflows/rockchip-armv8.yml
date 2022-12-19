@@ -1,0 +1,172 @@
+name: Build rockchip/armv8 openwrt
+on:
+  repository_dispatch:
+    types: ['compile Tools']
+#  schedule:
+#    - cron: 0 18 * * *
+  # watch:
+  #   types: started
+
+  env:
+    CONFIG_FILE: config/rockchip/armv8.config
+    SOURCE_URL: https://github.com/coolsnowwolf/lede
+    SOURCE_BRANCH: master
+    DIY_SH: diy-part2.sh
+    TOOLCHAIN_TAG: toolchain
+    CLASH_BINARY_PLATFORM: armv8
+    TOOLCHAIN_RELEASE_UPLOAD: true
+    FIRMWARE_RELEASE_UPLOAD: true
+    TZ: Asia/Shanghai
+
+  jobs:
+    Toolchain:
+      runs-on: ubuntu-22.04
+
+      outputs:
+        OPENWRT_ROOT_PATH: ${{ steps.clone.outputs.OPENWRT_ROOT_PATH }}
+        CURRENT_BRANCH: ${{ steps.env.outputs.CURRENT_BRANCH }}
+        SOURCE_OWNER: ${{ steps.env.outputs.SOURCE_OWNER }}
+        SOURCE_REPO: ${{ steps.env.outputs.SOURCE_REPO }}
+        DEVICE_PLATFORM: ${{ steps.env.outputs.DEVICE_PLATFORM }}
+        DEVICE_TARGET: ${{ steps.env.outputs.DEVICE_TARGET }}
+        DEVICE_SUBTARGET: ${{ steps.env.outputs.DEVICE_SUBTARGET }}
+        TOOLCHAIN_IMAGE: ${{ steps.env.outputs.TOOLCHAIN_IMAGE }}
+
+      steps:
+        - name: Initialization Environment
+          env:
+            DEBIAN_FRONTEND: noninteractive
+          run: |
+            docker rmi `docker images -q`
+            sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android /opt/ghc
+            sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
+            sudo -E apt-get -qq update
+            sudo -E apt-get -qq install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+            sudo -E apt-get -qq autoremove --purge
+            sudo -E apt-get -qq clean
+            sudo timedatectl set-timezone "$TZ"
+            mkdir -p workspace
+
+        - name: Checkout
+          uses: actions/checkout@main
+
+        - name: Clone Source Code
+          id: clone
+          run: |
+            df -hT $PWD
+            git clone $SOURCE_URL -b $SOURCE_BRANCH workspace/openwrt
+            cd workspace/openwrt
+            echo "OPENWRT_ROOT_PATH=$PWD" >> $GITHUB_ENV
+            echo "::set-output name=OPENWRT_ROOT_PATH::$(echo $PWD)"
+
+        - name: Generate Toolchain Config
+          run: |
+            [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRT_ROOT_PATH/.config
+            echo -e "\nCONFIG_ALL=y" >> $OPENWRT_ROOT_PATH/.config
+            echo -e "\nCONFIG_ALL_NONSHARED=y" >> $OPENWRT_ROOT_PATH/.config
+            cd $OPENWRT_ROOT_PATH
+            make defconfig > /dev/null 2>&1
+
+        - name: Generate Variables
+          id: env
+          run: |
+            export CURRENT_BRANCH="$(git symbolic-ref --short HEAD)"
+            echo "CURRENT_BRANCH=$CURRENT_BRANCH" >> $GITHUB_ENV
+            echo "::set-output name=CURRENT_BRANCH::$(echo $CURRENT_BRANCH)"
+            cd $OPENWRT_ROOT_PATH
+            export SOURCE_OWNER="$(echo $SOURCE_URL | awk -F '/' '{print $(NF-1)}')"
+            echo "SOURCE_OWNER=$SOURCE_OWNER" >> $GITHUB_ENV
+            echo "::set-output name=SOURCE_OWNER::$(echo $SOURCE_OWNER)"
+            export SOURCE_REPO="$(echo $SOURCE_URL | awk -F '/' '{print $(NF)}')"
+            echo "SOURCE_REPO=$SOURCE_REPO" >> $GITHUB_ENV
+            echo "::set-output name=SOURCE_REPO::$(echo $SOURCE_REPO)"
+            export DEVICE_TARGET=$(cat .config | grep CONFIG_TARGET_BOARD | awk -F '"' '{print $2}')
+            echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+            echo "::set-output name=DEVICE_TARGET::$(echo $DEVICE_TARGET)"
+            export DEVICE_SUBTARGET=$(cat .config | grep CONFIG_TARGET_SUBTARGET | awk -F '"' '{print $2}')
+            echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+            echo "::set-output name=DEVICE_SUBTARGET::$(echo $DEVICE_SUBTARGET)"
+            export DEVICE_PLATFORM=$(cat .config | grep CONFIG_TARGET_ARCH_PACKAGES | awk -F '"' '{print $2}')
+            echo "DEVICE_PLATFORM=$DEVICE_PLATFORM" >> $GITHUB_ENV
+            echo "::set-output name=DEVICE_PLATFORM::$(echo $DEVICE_PLATFORM)"
+            export TOOLCHAIN_IMAGE="toolchain-$SOURCE_OWNER-$SOURCE_REPO-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET"
+            echo "TOOLCHAIN_IMAGE=$TOOLCHAIN_IMAGE" >> $GITHUB_ENV
+            echo "::set-output name=TOOLCHAIN_IMAGE::$(echo $TOOLCHAIN_IMAGE)"
+
+        - name: Compare Toolchain Hash
+          id: hash
+          run: |
+            cd $OPENWRT_ROOT_PATH
+            export CURRENT_HASH=$(git log --pretty=tformat:"%H" -n1 tools toolchain)
+            echo "CURRENT_HASH=$CURRENT_HASH" >> $GITHUB_ENV
+            echo "::set-output name=CURRENT_HASH::$(echo $CURRENT_HASH)"
+            echo "CURRENT_HASH is $CURRENT_HASH"
+            export CACHE_HASH=$(curl -fSsL https://github.com/$GITHUB_REPOSITORY/releases/download/$TOOLCHAIN_TAG/$TOOLCHAIN_IMAGE.hash)
+            echo "CACHE_HASH is $CACHE_HASH"
+            if [ -z "$CACHE_HASH" ] || [ "$CURRENT_HASH" != "$CACHE_HASH" ]; then
+              echo "::set-output name=REBUILD_TOOLCHAIN::true"
+            fi
+
+        - name: Install Feeds
+          if: steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          run: |
+            cd $OPENWRT_ROOT_PATH
+            ./scripts/feeds update -a
+            ./scripts/feeds install -a
+            make defconfig
+
+        - name: Compile Tools
+          if: steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          run: |
+            cd $OPENWRT_ROOT_PATH
+            echo -e "$(nproc) thread compile"
+            make tools/compile -j$(nproc) || make tools/compile -j1 V=s
+
+        - name: Compile Toolchain
+          if: steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          run: |
+            cd $OPENWRT_ROOT_PATH
+            echo -e "$(nproc) thread compile"
+            make toolchain/compile -j$(nproc) || make toolchain/compile -j1 V=s
+            rm -rf .config* dl bin
+
+        - name: Generate Toolchain Image
+          if: steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          run: |
+            cd workspace
+            mksquashfs openwrt $TOOLCHAIN_IMAGE -force-gid 1001 -force-uid 1001 -comp zstd
+            mkdir -p $GITHUB_WORKSPACE/output
+            split -d -b 1900M $TOOLCHAIN_IMAGE $GITHUB_WORKSPACE/output/$TOOLCHAIN_IMAGE.img.
+            rm $TOOLCHAIN_IMAGE
+            cd $OPENWRT_ROOT_PATH
+            echo $CURRENT_HASH > $GITHUB_WORKSPACE/output/toolchain-$SOURCE_OWNER-$SOURCE_REPO-$SOURCE_BRANCH-$DEVICE_TARGET-$DEVICE_SUBTARGET.hash
+            ls -lh $GITHUB_WORKSPACE/output
+
+        - name: Upload Toolchain Image To Artifact
+          if: env.TOOLCHAIN_RELEASE_UPLOAD != 'true' && steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          uses: actions/upload-artifact@main
+          with:
+            name: ${{ env.TOOLCHAIN_IMAGE }}
+            path: output
+
+        - name: Delete Old Toolchain Assets From Release
+          if: env.TOOLCHAIN_RELEASE_UPLOAD == 'true' && steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          uses: mknejp/delete-release-assets@v1
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ env.TOOLCHAIN_TAG }}
+            assets: "toolchain-${{ env.TOOLCHAIN_IMAGE }}.*"
+            fail-if-no-assets: false
+            fail-if-no-release: false
+
+        - name: Upload Toolchain Image To Release
+          if: env.TOOLCHAIN_RELEASE_UPLOAD == 'true' && steps.hash.outputs.REBUILD_TOOLCHAIN == 'true'
+          uses: ncipollo/release-action@v1.8.0
+          with:
+            name: toolchain-image
+            allowUpdates: true
+            replacesArtifacts: true
+            tag: ${{ env.TOOLCHAIN_TAG }}
+            commit: ${{ env.CURRENT_BRANCH }}
+            token: ${{ secrets.GITHUB_TOKEN }}
+            artifacts: output/*
