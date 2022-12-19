@@ -236,9 +236,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Trigger build
-      if: steps.cacheHash.outputs.cache-hit != 'true'
-      uses: peter-evans/repository-dispatch@v1
-      with:
-        token: ${{ secrets.OPENWRTACTION_TRIGGER }}
-        event-type: compile Tools
+#    - name: Trigger build
+#      if: steps.cacheHash.outputs.cache-hit != 'true'
+#      uses: peter-evans/repository-dispatch@v1
+#      with:
+#        token: ${{ secrets.OPENWRTACTION_TRIGGER }}
+#        event-type: compile Tools
