@@ -15,6 +15,11 @@ env:
   DIY_P2_SH: diy-part2.sh
   RELEASE_BRANCH: main
   RELEASE_TAG: toolchain
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_COWTRANSFER: false
+  UPLOAD_WETRANSFER: false
+  UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
 
 jobs:
@@ -92,11 +97,21 @@ jobs:
           ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
           rm *.tar.xz
 
+      - name: Modify Files
+        id: modify
+        if: steps.fetchTool.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          mkdir -p staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl
+          touch staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl/.prepared
+          sed -i '/tools\/Makefile/d' Makefile
+          sed -i 's/ $(tools\/stamp-compile)//;s/ $(tools\/stamp-check)//' Makefile
+
       - name: Prepare config file
         env:
           PLATFORM: ${{ matrix.PLATFORM }}
         id: config
-        if: steps.fetchTool.conclusion == 'success' && !cancelled()
+        if: steps.modify.conclusion == 'success' && !cancelled()
         run: |
           cp $CONFIG_FILE $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
