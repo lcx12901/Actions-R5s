@@ -117,7 +117,7 @@ jobs:
           echo "DEVICE_ARCH_PACKAGES=$DEVICE_ARCH_PACKAGES" >> $GITHUB_ENV
 
       - name: Modify Files
-        id: config
+        id: modify
         if: steps.fetchTool.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
@@ -128,7 +128,7 @@ jobs:
 
       - name: Fetch Cached ToolChain
         id: fetchToolChain
-        if: steps.config.conclusion == 'success' && !cancelled()
+        if: steps.modify.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
           rm -rf bin/target/$DEVICE_TARGET/$DEVICESUBTARGET/* || true
