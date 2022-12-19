@@ -118,9 +118,10 @@ jobs:
           cd $OPENWRTROOT
           rm -rf bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/* || true
           mkdir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET || true
+          DEVICESUBTARGET=$DEVICE_SUBTARGET
           wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
           mkdir -p bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
-          mv $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$DEVICE_TARGET-${{ DEVICE_SUBTARGET }}_gcc-11.3.0_musl.Linux-x86_64.tar.xz
+          mv $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$DEVICE_TARGET-$DEVICESUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz
           ls bin/target/*/*
 
       - name: Compile the firmware
