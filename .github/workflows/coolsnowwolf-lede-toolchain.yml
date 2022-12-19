@@ -1,6 +1,6 @@
 name: Coolsnowwolf/Lede Toolchain Cache
 on:
-  repository_dispatch:
+#  repository_dispatch:
 #  schedule:
 #    - cron: 0 18 * * *
 #  watch:
