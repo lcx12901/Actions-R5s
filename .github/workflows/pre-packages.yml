@@ -98,7 +98,7 @@ jobs:
         id: config
         if: steps.fetchTool.conclusion == 'success' && !cancelled()
         run: |
-          cp config/$PLATFORM.config $OPENWRTROOT/.config
+          cp $CONFIG_FILE $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
           cd $OPENWRTROOT
           export DEVICE_TARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f3)"
