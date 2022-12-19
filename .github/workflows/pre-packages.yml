@@ -97,21 +97,11 @@ jobs:
           ./scripts/ext-tools.sh --tools *-prebuild-tools.tar.xz
           rm *.tar.xz
 
-      - name: Modify Files
-        id: modify
-        if: steps.fetchTool.conclusion == 'success' && !cancelled()
-        run: |
-          cd $OPENWRTROOT
-          mkdir -p staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl
-          touch staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl/.prepared
-          sed -i '/tools\/Makefile/d' Makefile
-          sed -i 's/ $(tools\/stamp-compile)//;s/ $(tools\/stamp-check)//' Makefile
-
       - name: Prepare config file
         env:
           PLATFORM: ${{ matrix.PLATFORM }}
         id: config
-        if: steps.modify.conclusion == 'success' && !cancelled()
+        if: steps.fetchTool.conclusion == 'success' && !cancelled()
         run: |
           cp $CONFIG_FILE $OPENWRTROOT/.config
           cat config/extra.config >> $OPENWRTROOT/.config
@@ -125,6 +115,16 @@ jobs:
           echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
           DEVICE_ARCH_PACKAGES="$(grep -v ^\# .config | grep CONFIG_TARGET_ARCH_PACKAGES= | cut -d\" -f2)"
           echo "DEVICE_ARCH_PACKAGES=$DEVICE_ARCH_PACKAGES" >> $GITHUB_ENV
+
+      - name: Modify Files
+        id: config
+        if: steps.fetchTool.conclusion == 'success' && !cancelled()
+        run: |
+          cd $OPENWRTROOT
+          mkdir -p staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl
+          touch staging_dir/target-"$DEVICE_ARCH_PACKAGES"_musl/.prepared
+          sed -i '/tools\/Makefile/d' Makefile
+          sed -i 's/ $(tools\/stamp-compile)//;s/ $(tools\/stamp-check)//' Makefile
 
       - name: Fetch Cached ToolChain
         id: fetchToolChain
