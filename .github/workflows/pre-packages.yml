@@ -103,8 +103,8 @@ jobs:
           cd $OPENWRTROOT
           export DEVICE_TARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f3)"
           echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
-          export DEVICE_SUBTARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f4)"
-          echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+          export DEVICESUBTARGET="$(grep -v ^\# .config | grep _DEVICE_ | cut -d_ -f4)"
+          echo "DEVICESUBTARGET=$DEVICESUBTARGET" >> $GITHUB_ENV
           make defconfig
           export DEVICE_ARCH="$(grep -v ^\# .config | grep CONFIG_ARCH= | cut -d\" -f2)"
           echo "DEVICE_ARCH=$DEVICE_ARCH" >> $GITHUB_ENV
@@ -116,12 +116,11 @@ jobs:
         if: steps.config.conclusion == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT
-          rm -rf bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/* || true
-          mkdir bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET || true
-          DEVICESUBTARGET=$DEVICE_SUBTARGET
-          wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz
-          mkdir -p bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET
-          mv $TARGET_INFO-$DEVICE_TARGET-$DEVICE_SUBTARGET-toolchain.tar.xz bin/target/$DEVICE_TARGET/$DEVICE_SUBTARGET/openwrt-toolchain-$DEVICE_TARGET-$DEVICESUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz
+          rm -rf bin/target/$DEVICE_TARGET/$DEVICESUBTARGET/* || true
+          mkdir bin/target/$DEVICE_TARGET/$DEVICESUBTARGET || true
+          wget -c -t=3 https://github.com/lcx12901/Actions-R5s/releases/download/$RELEASE_TAG/$TARGET_INFO-$DEVICE_TARGET-$DEVICESUBTARGET-toolchain.tar.xz
+          mkdir -p bin/target/$DEVICE_TARGET/$DEVICESUBTARGET
+          mv $TARGET_INFO-$DEVICE_TARGET-$DEVICESUBTARGET-toolchain.tar.xz bin/target/$DEVICE_TARGET/$DEVICESUBTARGET/openwrt-toolchain-$DEVICE_TARGET-$DEVICESUBTARGET_gcc-11.3.0_musl.Linux-x86_64.tar.xz
           ls bin/target/*/*
 
       - name: Compile the firmware
