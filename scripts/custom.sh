@@ -82,6 +82,7 @@ git clone --depth=1 https://github.com/lisaac/luci-lib-docker
 
 # Add luci-theme
 git clone https://github.com/DHDAXCW/theme
+git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon
 git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config
 
 # Add subconverter
@@ -147,3 +148,29 @@ svn co https://github.com/DHDAXCW/packages/trunk/utils/coremark customfeeds/pack
 sed -i 's/5.4/6.1/g' ./target/linux/rockchip/Makefile
 rm -rf target/linux/rockchip/image/armv8.mk
 cp -f $GITHUB_WORKSPACE/armv8.mk target/linux/rockchip/image/armv8.mk
+
+mkdir -p files/root
+pushd files/root
+
+## Install oh-my-zsh
+# Clone oh-my-zsh repository
+git clone https://github.com/robbyrussell/oh-my-zsh ./.oh-my-zsh
+
+# Install extra plugins
+git clone https://github.com/zsh-users/zsh-autosuggestions ./.oh-my-zsh/custom/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ./.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-completions ./.oh-my-zsh/custom/plugins/zsh-completions
+
+# Get .zshrc dotfile
+cp $GITHUB_WORKSPACE/data/zsh/.zshrc .
+
+popd
+
+# Add date version
+export DATE_VERSION=$(date -d "$(rdate -n -4 -p pool.ntp.org)" +'%Y-%m-%d')
+sed -i "s/%C/%C (${DATE_VERSION})/g" package/base-files/files/etc/openwrt_release
+
+# Rename hostname to OpenWrt
+pushd package/base-files/files/bin
+sed -i 's/OpenWrt/WKTL/g' config_generate
+popd
