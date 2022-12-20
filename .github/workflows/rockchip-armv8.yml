@@ -9,8 +9,8 @@ on:
 
 env:
   CONFIG_FILE: config/rockchip/armv8.config
-  SOURCE_URL: https://github.com/coolsnowwolf/lede
-  SOURCE_BRANCH: master
+  SOURCE_URL: https://github.com/immortalwrt/immortalwrt
+  SOURCE_BRANCH: openwrt-21.02
   DIY_SH: scripts/custom.sh
   TOOLCHAIN_TAG: toolchain
   CLASH_BINARY_PLATFORM: armv8
