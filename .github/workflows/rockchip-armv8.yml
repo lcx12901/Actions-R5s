@@ -11,7 +11,7 @@ env:
   CONFIG_FILE: config/rockchip/armv8.config
   SOURCE_URL: https://github.com/coolsnowwolf/lede
   SOURCE_BRANCH: master
-  DIY_SH: script/custom.sh
+  DIY_SH: scripts/custom.sh
   TOOLCHAIN_TAG: toolchain
   CLASH_BINARY_PLATFORM: armv8
   TOOLCHAIN_RELEASE_UPLOAD: true
