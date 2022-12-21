@@ -20,8 +20,6 @@ rm -rf package/kernel/mac80211
 svn export https://github.com/coolsnowwolf/lede/trunk/package/kernel/mac80211 package/kernel/mac80211
 rm -rf package/kernel/rtl8821cu
 
-# alist
-git clone https://github.com/sbwml/luci-app-alist package/alist
 rm -rf feeds/packages/lang/golang
 svn export https://github.com/sbwml/packages_lang_golang/branches/19.x feeds/packages/lang/golang
 
