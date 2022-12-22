@@ -241,4 +241,4 @@ jobs:
       uses: peter-evans/repository-dispatch@v1
       with:
         token: ${{ secrets.OPENWRTACTION_TRIGGER }}
-        event-type: compile Tools
+        event-type: LEDE Update

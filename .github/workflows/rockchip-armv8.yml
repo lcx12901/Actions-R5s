@@ -1,7 +1,7 @@
 name: Build rockchip/armv8 openwrt
 on:
   repository_dispatch:
-    types: ['compile Tools']
+    types: ['LEDE Update']
 #  schedule:
 #    - cron: 0 18 * * *
   # watch:

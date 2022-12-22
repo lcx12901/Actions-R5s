@@ -28,7 +28,7 @@ mkdir package/community
 pushd package/community
 
 # Add Lienol's Packages
-#git clone --depth=1 https://github.com/Lienol/openwrt-package
+git clone --depth=1 https://github.com/Lienol/openwrt-package
 rm -rf openwrt-package/verysync
 rm -rf openwrt-package/luci-app-verysync
 
@@ -115,7 +115,7 @@ svn co https://github.com/immortalwrt/immortalwrt/branches/openwrt-18.06-k5.4/pa
 
 # Add Pandownload
 pushd package/lean
-svn co https://github.com/immortalwrt/packages/trunk/net/pandownload-fake-server
+#svn co https://github.com/immortalwrt/packages/trunk/net/pandownload-fake-server
 popd
 
 # Mod zzz-default-settings
