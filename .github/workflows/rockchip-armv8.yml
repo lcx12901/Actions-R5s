@@ -9,8 +9,8 @@ on:
 
 env:
   CONFIG_FILE: config/rockchip/armv8.config
-  SOURCE_URL: https://github.com/DHDAXCW/lede-rockchip
-  SOURCE_BRANCH: stable
+  SOURCE_URL: https://github.com/coolsnowwolf/lede
+  SOURCE_BRANCH: master
   FEEDS_CONF: feeds_config/custom.feeds.conf.default
   DIY_FEED: scripts/hook-feeds.sh
   DIY_SH: scripts/custom.sh
