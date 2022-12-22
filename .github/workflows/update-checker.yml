@@ -18,7 +18,7 @@ env:
   REPO_PATH_lcx12901Action: "Actions-R5s"
 
   # Lean源码
-  REPO_URL_Lede: https://github.com/coolsnowwolf/lede
+  REPO_URL_Lede: https://github.com/DHDAXCW/lede-rockchip
   REPO_BRANCH_Lede: master
   REPO_PATH_Lede: "lede"
 
