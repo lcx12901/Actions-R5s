@@ -28,12 +28,12 @@ mkdir package/community
 pushd package/community
 
 # Add Lienol's Packages
-git clone --depth=1 https://github.com/Lienol/openwrt-package
+#git clone --depth=1 https://github.com/Lienol/openwrt-package
 rm -rf openwrt-package/verysync
 rm -rf openwrt-package/luci-app-verysync
 
 # Add luci-app-adguardhome
-svn co https://github.com/Lienol/openwrt-package/branches/other/luci-app-adguardhome
+#svn co https://github.com/Lienol/openwrt-package/branches/other/luci-app-adguardhome
 
 # Add luci-app-passwall
 git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall
